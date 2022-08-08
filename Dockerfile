@@ -1,13 +1,31 @@
-FROM python:3.10
+FROM python:3.10 as base
 
-RUN apt-get update && apt-get install -y libsndfile1-dev ffmpeg
+# Se instalan paquetes necesarios para que las bibliotecas usadas por librosa puedan
+# procesar audio.
+RUN apt-get update && \
+    apt-get install -y \
+    # Librosa procesa audio usando las librerías audioread y soundfile. Si se usa
+    # conda, no es necesario instalar nada, en caso contrario se necesitan paquetes
+    # adicionales
+    # Libsndfile: Necesario para que funcione correctamente soundfile.
+    libsndfile1-dev
 
-WORKDIR /api_colmena_abeja
+# Se establece el directorio de trabajo actual
+WORKDIR /usr/src/api
 
+FROM base as development
+
+# Se copia el archivo con las dependencias
 COPY requirements.txt ./
 
+# Se instalan las dependencias
 RUN pip --no-cache-dir install -r requirements.txt
 
+# Se copia el resto de los archivos a la carpeta de trabajo actual
 COPY . ./
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Se expone el puerto 8000
+EXPOSE 8000
+
+# Se ejecuta la api
+CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
