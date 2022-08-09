@@ -16,10 +16,10 @@ WORKDIR /usr/src/api
 FROM base as development
 
 # Se copia el archivo con las dependencias
-COPY requirements.txt ./
+COPY requirements.dev.txt ./
 
 # Se instalan las dependencias
-RUN pip --no-cache-dir install -r requirements.txt
+RUN pip --no-cache-dir install -r requirements.dev.txt
 
 # Se copia el resto de los archivos a la carpeta de trabajo actual
 COPY . ./
@@ -29,3 +29,20 @@ EXPOSE 8000
 
 # Se ejecuta la api
 CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+
+FROM base as production
+
+# Se copia el archivo con las dependencias
+COPY requirements.prod.txt ./
+
+# Se instalan las dependencias
+RUN pip install -r requirements.prod.txt
+
+# Se copia el resto de los archivos a la carpeta de trabajo actual
+COPY . ./
+
+# Se expone el puerto 8000
+EXPOSE 443
+
+# Se ejecuta la api
+CMD [ "gunicorn", "api_memoria_colmena_abejas.wsgi:application", "--bind", "0.0.0.0:443" ]
