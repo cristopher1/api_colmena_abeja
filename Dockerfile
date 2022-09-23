@@ -1,14 +1,19 @@
+# El modulo librosa procesa audio usando las librerías audioread y soundfile. Si se quiere
+# procesar archivos .mp3 mediante librosa, se tendrá que instalar paquetes adicionales para
+# que audioread pueda hacerlo, para ello puede consultar la página
+# https://github.com/beetbox/audioread
 FROM python:3.10 as base
 
 # Se instalan paquetes necesarios para que las bibliotecas usadas por librosa puedan
 # procesar audio.
 RUN apt-get update && \
     apt-get install -y \
-    # Librosa procesa audio usando las librerías audioread y soundfile. Si se usa
-    # conda, no es necesario instalar nada, en caso contrario se necesitan paquetes
-    # adicionales
-    # Libsndfile: Necesario para que funcione correctamente soundfile.
-    libsndfile1-dev
+    # Necesario para que funcione correctamente soundfile. Soundfile puede
+    # procesar archivos .wav usando libsndfile
+    libsndfile1-dev \
+    # Necesario para que funcione correctamente audioread. Audioread puede
+    # procesar archivos .mp3 usando ffmpeg mediante la interfaz de comandos
+    ffmpeg
 
 # Se establece el directorio de trabajo actual
 WORKDIR /usr/src/api
