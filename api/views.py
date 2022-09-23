@@ -25,11 +25,6 @@ VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 # Número de canales: Usado para dimensionar el vector de mfccs entregado a la CNN.
 N_CANAL = int(os.environ.get('N_CANAL'))
 
-# Función usada para trabajar con archivos que no tienen extensión .wav,
-# audioread solo trabaja con rutas de archivos y no con file-like object
-# por lo tanto esta función crea un archivo temporar para ello.
-
-
 def copiarAudio(audio, suffix):
     """
         Copia el contenido de un archivo virtual a un archivo temporal.
