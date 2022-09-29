@@ -25,6 +25,7 @@ VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 # Número de canales: Usado para dimensionar el vector de mfccs entregado a la CNN.
 N_CANAL = int(os.environ.get('N_CANAL'))
 
+
 def copiarAudio(audio, suffix):
     """
         Copia el contenido de un archivo virtual a un archivo temporal.
@@ -80,8 +81,10 @@ def cargarAudio(audio):
         audio (file-like object): Archivo cargado en memoria.
 
         Retorno:
-        serie_tiempo (array): Arreglo con la serie de tiempo contenida en el archivo de audio.
-        tasa_muestreo (int): Tasa de muestreo con la cual se capturo la serie de tiempo
+        (tuple): Retorna una tupla con dos valores descritos a continuación (ordenados según la
+        numeración utilizada).
+        1. Serie_tiempo (array): Arreglo con la serie de tiempo contenida en el archivo de audio.
+        2. Tasa_muestreo (int): Tasa de muestreo con la cual se capturo la serie de tiempo
 
         Excepciones producidas:
         AudioLoadError (Exception).
