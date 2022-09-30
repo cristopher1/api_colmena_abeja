@@ -108,12 +108,20 @@ class EstadoSaludColmena(APIView):
         try:
             audio = request.FILES['audio']
             serie_tiempo, tasa_muestreo = cargarAudio(audio)
-            serie_tiempo = serie_tiempo[:tasa_muestreo * VENTANA]
+            tamanno_muestra = tasa_muestreo * VENTANA
+            if len(serie_tiempo) < tamanno_muestra:
+                raise exceptions.AudioSizeError("Audio muy corto",
+                                                "El archivo tiene una duración menor a {0} {1}"
+                                                .format(VENTANA, "segundos"))
+            serie_tiempo = serie_tiempo[:tamanno_muestra]
             mfcc_13 = librosa.feature.mfcc(
                 y=serie_tiempo, sr=tasa_muestreo, n_mfcc=13, dct_type=2)
             mfcc_13 = mfcc_13.reshape(1, *mfcc_13.shape, N_CANAL)
             prediccion = model.predict(mfcc_13)
             return Response(prediccion, status=status.HTTP_200_OK)
+        except exceptions.AudioSizeError as e:
+            logger.info("excepcion {0}".format(e))
+            return Response(e.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.info("excepcion {0}".format(e))
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
