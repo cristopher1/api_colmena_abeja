@@ -27,16 +27,43 @@ VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 N_CANAL = int(os.environ.get('N_CANAL'))
 
 
+# Anomalias detectadas por la CNN
 class Anomalias(enum.Enum):
     ABEJA_REINA = 0
 
 
+# Utilizado para acceder al arreglo predicción que solo contiene dos valores.
+# Si por algún motivo desea detectar más anomalias con la CNN, tendrá que cambiar
+# la forma de acceder a los resultados de las predicciones mediante la función
+# generarResultados.
 class PresenciaAnomalias(enum.Enum):
     NO = 0
     SI = 1
 
 
 def generarResultados(prediccion):
+    """
+        Formatea los resultados para que puedan ser consumidos por un cliente web.
+
+        Procesa los resultados de analizar un solo archivo de audio mediante la
+        CNN. Se genera un diccionario cuyas claves son las anomalias detectadas,
+        los valores son diccionarios que contienen las claves SI y NO, sus valores
+        corresponde a la probabilidad de existir dicho fenomeno dentro de la
+        colmena, ejemplo:
+
+        {
+            "ABEJA_REINA": {
+                "SI": 0.3,
+                "NO": 0.7
+            }
+        }
+
+        Parámetros:
+        prediccion (array 1D): Arreglo con las predicciones realizadas por la CNN.
+
+        Retorno:
+        (dict): Diccionario con la respuesta formateada.
+    """
     return dict((anom.name, dict((presAnom.name, prediccion[presAnom.value])
                                  for presAnom in PresenciaAnomalias)) for anom in Anomalias)
 
