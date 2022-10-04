@@ -8,6 +8,7 @@ import librosa
 import logging
 import os
 import tempfile
+import enum
 logger = logging.getLogger('django')
 
 # Ruta donde se guarda el archivo que contiene los pesos y arquitectura de la CNN
@@ -24,6 +25,20 @@ model = keras.models.load_model(cnn_path)
 VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 # Número de canales: Usado para dimensionar el vector de mfccs entregado a la CNN.
 N_CANAL = int(os.environ.get('N_CANAL'))
+
+
+class Anomalias(enum.Enum):
+    ABEJA_REINA = 0
+
+
+class PresenciaAnomalias(enum.Enum):
+    NO = 0
+    SI = 1
+
+
+def generarResultados(prediccion):
+    return dict((anom.name, dict((presAnom.name, prediccion[presAnom.value])
+                                 for presAnom in PresenciaAnomalias)) for anom in Anomalias)
 
 
 def copiarAudio(audio, suffix):
@@ -117,8 +132,11 @@ class EstadoSaludColmena(APIView):
             mfcc_13 = librosa.feature.mfcc(
                 y=serie_tiempo, sr=tasa_muestreo, n_mfcc=13, dct_type=2)
             mfcc_13 = mfcc_13.reshape(1, *mfcc_13.shape, N_CANAL)
-            prediccion = model.predict(mfcc_13)
-            return Response(prediccion, status=status.HTTP_200_OK)
+            # Como solamente se esta procesando un archivo a la vez, se toma la primera
+            # predicción de la matriz de predicciones
+            prediccion = model.predict(mfcc_13)[0]
+            resultado = generarResultados(prediccion)
+            return Response(resultado, status=status.HTTP_200_OK)
         except exceptions.AudioSizeError as e:
             logger.info("excepcion {0}".format(e))
             return Response(e.errors, status=status.HTTP_400_BAD_REQUEST)
