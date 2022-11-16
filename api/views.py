@@ -29,7 +29,7 @@ N_CANAL = int(os.environ.get('N_CANAL'))
 
 # Anomalias detectadas por la CNN
 class Anomalias(enum.Enum):
-    ABEJA_REINA = 0
+    SIN_ABEJA_REINA = 0
 
 
 # Utilizado para acceder al arreglo predicción que solo contiene dos valores.
@@ -41,31 +41,65 @@ class PresenciaAnomalias(enum.Enum):
     SI = 1
 
 
-def generarResultados(prediccion):
+def generarResultados(nombre_audio, prediccion):
     """
         Formatea los resultados para que puedan ser consumidos por un cliente web.
 
         Procesa los resultados de analizar un solo archivo de audio mediante la
-        CNN. Se genera un diccionario cuyas claves son las anomalias detectadas,
-        los valores son diccionarios que contienen las claves SI y NO, sus valores
-        corresponde a la probabilidad de existir dicho fenomeno dentro de la
-        colmena, ejemplo:
+        CNN. Se genera un diccionario cuyas claves son:
+
+        - audio (string): Indica el nombre del archivo de audio procesado
+        (incluye la extensión del archivo).
+        - anomalias (list): Lista que contiene las anomalias detectadas dentro de la colmena.
+        Cada anomalia es representada mediante un diccionario cuyos valores son:
+            - nombre (string): String que indica el nombre de la anomalia.
+            - si (float): flotante que señala la probabilidad de que dicha anomalia este
+            presente dentro de la colmena.
+            - no (float): flotante que señala la probabilidad de que dicha anomalia no
+            este presente dentro de la colmena.
+
+        A continuación se da un ejemplo gráfico de la estructura de la respuesta enviada
+        por el servidor.
 
         {
-            "ABEJA_REINA": {
-                "SI": 0.3,
-                "NO": 0.7
-            }
+            "audio": "nombre audio",
+            "anomalias": [
+                {
+                    "nombre": "sin_abeja_reina",
+                    "si": 0.3,
+                    "no": 0.7
+                }
+            ]
         }
 
+        Hay que tener en cuenta que al momento de desarrollar esta aplicación, solo se
+        analizaba si existia o no presencia de abeja reina, por lo tanto el largo de
+        "anomalias" era 1. Si se cambia el sistema para analizar más anomalias, modificar
+        esta parte de la documentacion.
+
         Parámetros:
+        nombre_audio (string): Nombre del archivo de audio (incluye extension).
         prediccion (array 1D): Arreglo con las predicciones realizadas por la CNN.
 
         Retorno:
         (dict): Diccionario con la respuesta formateada.
     """
-    return dict((anom.name, dict((presAnom.name, prediccion[presAnom.value])
-                                 for presAnom in PresenciaAnomalias)) for anom in Anomalias)
+    # Nota. De momento la forma en que se formatea los datos solo funciona para una CNN que
+    # indica si una colmena tiene o no una anomalia (por ejemplo: sin abeja reina o con abeja reina).
+    # Si se quiere trabajar con una CNN que clasifique varias anomalías (por ejemplo: ausencia de
+    # reina, presencia de varroa, ataque de algun insecto, etc) modificar la variable anomalias,
+    # para ajustar la salida de la CNN con el formato de los datos entregados por el servidor.
+    anomalias = [
+        dict(
+            nombre=anomalia.name.lower(),
+            si=prediccion[PresenciaAnomalias.SI.value],
+            no=prediccion[PresenciaAnomalias.NO.value]
+        ) for anomalia in Anomalias
+    ]
+    return {
+        "audio": nombre_audio,
+        "anomalias": anomalias
+    }
 
 
 def copiarAudio(audio, suffix):
@@ -134,7 +168,7 @@ def cargarAudio(audio):
     try:
         suffix = audio.name.split('.')[-1]
         audio = audio if suffix == "wav" else copiarAudio(audio, suffix)
-        serie_tiempo, tasa_muestreo = librosa.load(audio, sr=None)
+        serie_tiempo, tasa_muestreo = librosa.load(audio, sr=44100)
         # Borra el archivo temporal generado por copiarAudio
         if isinstance(audio, str):
             os.unlink(audio)
@@ -162,7 +196,7 @@ class EstadoSaludColmena(APIView):
             # Como solamente se esta procesando un archivo a la vez, se toma la primera
             # predicción de la matriz de predicciones
             prediccion = model.predict(mfcc_13)[0]
-            resultado = generarResultados(prediccion)
+            resultado = generarResultados(audio.name, prediccion)
             return Response(resultado, status=status.HTTP_200_OK)
         except exceptions.AudioSizeError as e:
             logger.info("excepcion {0}".format(e))
