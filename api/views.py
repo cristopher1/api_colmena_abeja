@@ -41,7 +41,7 @@ class PresenciaAnomalias(enum.Enum):
     SI = 1
 
 
-def generarResultados(nombre_audio, prediccion):
+def formatearResultados(nombre_audio, prediccion):
     """
         Formatea los resultados para que puedan ser consumidos por un cliente web.
 
@@ -196,7 +196,7 @@ class EstadoSaludColmena(APIView):
             # Como solamente se esta procesando un archivo a la vez, se toma la primera
             # predicción de la matriz de predicciones
             prediccion = model.predict(mfcc_13)[0]
-            resultado = generarResultados(audio.name, prediccion)
+            resultado = formatearResultados(audio.name, prediccion)
             return Response(resultado, status=status.HTTP_200_OK)
         except exceptions.AudioSizeError as e:
             logger.info("excepcion {0}".format(e))
