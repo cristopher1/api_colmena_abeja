@@ -139,6 +139,26 @@ def copiarAudio(audio, suffix):
             "No se pudo copiar el archivo", e.errors)
 
 
+def borrarAudioCopiado(audio):
+    """
+        Borra el archivo temporal generado por copiarAudio.
+
+        borrarAudioCopiado se encarga de borrar el archivo temporal generado por copiarAudio.
+        Para que el archivo temporal sea borrado, la variable audio debe contener el nombre
+        del archivo en cuestión.
+
+        Parámetros:
+
+        audio (Object): Si esta variable es de tipo string, corresponde
+        al nombre del archivo temporal generado por copiarAudio. Si es un file-like object
+        entonces es un archivo virtual que puede ser usado directamente por librosa,
+        el cual no fue guardado en un archivo temporal, en dicho caso esta función no hace
+        nada.
+    """
+    if isinstance(audio, str):
+        os.unlink(audio)
+
+
 def cargarAudio(audio):
     """
         Carga el contenido de un archivo de audio en memoria.
@@ -169,9 +189,7 @@ def cargarAudio(audio):
         suffix = audio.name.split('.')[-1]
         audio = audio if suffix == "wav" else copiarAudio(audio, suffix)
         serie_tiempo, tasa_muestreo = librosa.load(audio, sr=44100)
-        # Borra el archivo temporal generado por copiarAudio
-        if isinstance(audio, str):
-            os.unlink(audio)
+        borrarAudioCopiado(audio)
         return serie_tiempo, tasa_muestreo
     except Exception as e:
         raise exceptions.AudioLoadError(
