@@ -3,12 +3,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from tensorflow import keras
 from pathlib import Path
+from datetime import datetime as dt
 from . import exceptions
 import librosa
 import logging
 import os
 import tempfile
 import enum
+import pytz as tz
 logger = logging.getLogger('django')
 
 # Ruta donde se guarda el archivo que contiene los pesos y arquitectura de la CNN
@@ -16,7 +18,7 @@ cnn_path = Path(__file__).resolve().parent / 'CNN' / \
     '13_mfcc_abeja_reina_3_seg.h5'
 
 # Se carga la CNN a partir del archivo anteriormente mencionado
-model = keras.models.load_model(cnn_path)
+MODEL = keras.models.load_model(cnn_path)
 
 # Variables de entorno
 # Ventana de tiempo: Usada para tomar la muestra de audio a procesar.
@@ -26,8 +28,9 @@ VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 # Número de canales: Usado para dimensionar el vector de mfccs entregado a la CNN.
 N_CANAL = int(os.environ.get('N_CANAL'))
 
-
 # Anomalias detectadas por la CNN
+
+
 class Anomalias(enum.Enum):
     SIN_ABEJA_REINA = 0
 
@@ -41,7 +44,7 @@ class PresenciaAnomalias(enum.Enum):
     SI = 1
 
 
-def formatearResultados(nombre_audio, prediccion):
+def formatearResultados(nombre_audio, prediccion, fecha):
     """
         Formatea los resultados para que puedan ser consumidos por un cliente web.
 
@@ -50,6 +53,10 @@ def formatearResultados(nombre_audio, prediccion):
 
         - audio (string): Indica el nombre del archivo de audio procesado
         (incluye la extensión del archivo).
+        - fecha (string): Indica la fecha en la cual se ha procesado el archivo.
+        - hora (string): Indica la hora en la cual se ha procesado el archivo, se utiliza
+        la zona horaria del cliente para poder obtener los datos asociados a la fecha.
+        Se debe tener en cuenta que la zona horaria se obtiene usando pytz.
         - anomalias (list): Lista que contiene las anomalias detectadas dentro de la colmena.
         Cada anomalia es representada mediante un diccionario cuyos valores son:
             - nombre (string): String que indica el nombre de la anomalia.
@@ -63,6 +70,8 @@ def formatearResultados(nombre_audio, prediccion):
 
         {
             "audio": "nombre audio",
+            "fecha": "fecha de procesamiento",
+            "hora": "hora de procesamiento",
             "anomalias": [
                 {
                     "nombre": "sin_abeja_reina",
@@ -98,6 +107,8 @@ def formatearResultados(nombre_audio, prediccion):
     ]
     return {
         "audio": nombre_audio,
+        "fecha": formatearFecha(fecha),
+        "hora": formatearHora(fecha),
         "anomalias": anomalias
     }
 
@@ -196,10 +207,57 @@ def cargarAudio(audio):
             "No se pudo cargar el audio", e.errors)
 
 
+def obtenerFecha(zona_horaria):
+    """
+        Obtiene la fecha en la cual se ha procesado el archivo de audio.
+
+        Se logra procesando la zona horaria obtenida desde el cliente con la el módulo
+        pytz y datetime.
+
+        Parámetros:
+        zona_horaria (string): Zona horaria obtenida desde el cliente.
+
+        Retorno:
+        (datetime): Fecha actual obtenida con la zona horaria corrvspondiente
+    """
+    return dt.now(tz.timezone(zona_horaria))
+
+
+def formatearFecha(fecha):
+    """
+        Formatea la fecha actual.
+
+        Formatea la fecha obtenida por obtenerFecha con el formato día/mes/año.
+
+        Parámetros:
+        fecha (datetime): Fecha actual.
+
+        Retorno:
+        (string): Fecha con el formato día/mes/año.
+    """
+    return fecha.strftime("%d/%m/%Y")
+
+
+def formatearHora(fecha):
+    """
+        Formatea la hora actual.
+
+        Formatea la hora obtenida por obtenerFecha con el formato hora:minuto:segundo
+
+        Parámetros:
+        fecha (datetime): Fecha actual.
+
+        Retorno:
+        (string): Hora con el formato hora:minuto:segundo
+    """
+    return fecha.strftime("%H:%M:%S")
+
+
 class EstadoSaludColmena(APIView):
 
     def post(self, request):
         try:
+            zonaHoraria = request.data['zonaHoraria']
             audio = request.FILES['audio']
             serie_tiempo, tasa_muestreo = cargarAudio(audio)
             tamanno_muestra = tasa_muestreo * VENTANA
@@ -213,8 +271,9 @@ class EstadoSaludColmena(APIView):
             mfcc_13 = mfcc_13.reshape(1, *mfcc_13.shape, N_CANAL)
             # Como solamente se esta procesando un archivo a la vez, se toma la primera
             # predicción de la matriz de predicciones
-            prediccion = model.predict(mfcc_13)[0]
-            resultado = formatearResultados(audio.name, prediccion)
+            prediccion = MODEL.predict(mfcc_13)[0]
+            fecha = obtenerFecha(zonaHoraria)
+            resultado = formatearResultados(audio.name, prediccion, fecha)
             return Response(resultado, status=status.HTTP_200_OK)
         except exceptions.AudioSizeError as e:
             logger.info("excepcion {0}".format(e))
