@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from tensorflow import keras
+from tensorflow_addons.metrics import F1Score
 from pathlib import Path
 from datetime import datetime as dt
 from . import exceptions
