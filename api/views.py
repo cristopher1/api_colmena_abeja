@@ -30,8 +30,6 @@ VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
 N_CANAL = int(os.environ.get('N_CANAL'))
 
 # Anomalias detectadas por la CNN
-
-
 class Anomalias(enum.Enum):
     SIN_ABEJA_REINA = 0
 
