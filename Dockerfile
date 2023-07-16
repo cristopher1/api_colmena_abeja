@@ -2,7 +2,7 @@
 # procesar archivos .mp3 mediante librosa, se tendrá que instalar paquetes adicionales para
 # que audioread pueda hacerlo, para ello puede consultar la página
 # https://github.com/beetbox/audioread
-FROM python:3.10 as base
+FROM python:3.10-slim@sha256:5ddc6ea17ec33701f8d5a6777a7b9953b7786eddeafb28b0d4e84011ebe6976b as base
 
 # Se instalan paquetes necesarios para que las bibliotecas usadas por librosa puedan
 # procesar audio.
@@ -21,7 +21,10 @@ FROM base as development
 
 RUN apt-get update && apt-get install -y \
     # Instalar editor de texto, para revisar archivos dentro del contenedor
-    nano
+    nano \
+    # Instalar pip, para los casos donde se deban probar paquetes de python
+    # dentro del contenedor de desarrollo.
+    python3-pip
 
 # Se copia el archivo con las dependencias
 COPY requirements.dev.txt ./
@@ -44,7 +47,7 @@ FROM base as production
 COPY requirements.prod.txt ./
 
 # Se instalan las dependencias
-RUN pip install -r requirements.prod.txt
+RUN pip --no-cache-dir install -r requirements.prod.txt
 
 # Se copia el resto de los archivos a la carpeta de trabajo actual
 COPY . ./
