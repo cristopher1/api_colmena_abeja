@@ -6,6 +6,7 @@ from tensorflow_addons.metrics import F1Score
 from pathlib import Path
 from datetime import datetime as dt
 from . import exceptions
+from decouple import config
 import librosa
 import logging
 import os
@@ -25,9 +26,9 @@ MODEL = keras.models.load_model(cnn_path)
 # Ventana de tiempo: Usada para tomar la muestra de audio a procesar.
 # Depende de la CNN. Por ejemplo, una CNN que trabaja con muestras de audio
 # de 3[s], usará una ventana con valor 3.
-VENTANA = int(os.environ.get('VENTANA_TIEMPO'))
+VENTANA = config('VENTANA_TIEMPO', cast=int)
 # Número de canales: Usado para dimensionar el vector de mfccs entregado a la CNN.
-N_CANAL = int(os.environ.get('N_CANAL'))
+N_CANAL = config('N_CANAL', cast=int)
 
 # Anomalias detectadas por la CNN
 class Anomalias(enum.Enum):
