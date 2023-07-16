@@ -6,8 +6,7 @@ FROM python:3.10 as base
 
 # Se instalan paquetes necesarios para que las bibliotecas usadas por librosa puedan
 # procesar audio.
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update && apt-get install -y \
     # Necesario para que funcione correctamente soundfile. Soundfile puede
     # procesar archivos .wav usando libsndfile
     libsndfile1-dev \
@@ -19,6 +18,10 @@ RUN apt-get update && \
 WORKDIR /usr/src/api
 
 FROM base as development
+
+RUN apt-get update && apt-get install -y \
+    # Instalar editor de texto, para revisar archivos dentro del contenedor
+    nano
 
 # Se copia el archivo con las dependencias
 COPY requirements.dev.txt ./
