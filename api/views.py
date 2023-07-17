@@ -93,23 +93,11 @@ def formatearResultados(nombre_audio, prediccion, fecha):
         Retorno:
         (dict): Diccionario con la respuesta formateada.
     """
-    # Nota. De momento la forma en que se formatea los datos solo funciona para una CNN que
-    # indica si una colmena tiene o no una anomalia (por ejemplo: sin abeja reina o con abeja reina).
-    # Si se quiere trabajar con una CNN que clasifique varias anomalías (por ejemplo: ausencia de
-    # reina, presencia de varroa, ataque de algun insecto, etc) modificar la variable anomalias,
-    # para ajustar la salida de la CNN con el formato de los datos entregados por el servidor.
-    anomalias = [
-        dict(
-            nombre=anomalia.name.lower(),
-            si=prediccion[PresenciaAnomalias.SI.value],
-            no=prediccion[PresenciaAnomalias.NO.value]
-        ) for anomalia in Anomalias
-    ]
     return {
         "audio": nombre_audio,
         "fecha": formatearFecha(fecha),
         "hora": formatearHora(fecha),
-        "anomalias": anomalias
+        "anomalias": formatearAnomalias(prediccion)
     }
 
 
@@ -207,6 +195,36 @@ def cargarAudio(audio):
             "No se pudo cargar el audio", e.errors)
 
 
+def formatearAnomalias(prediccion):
+    """
+        Formatea los resultados de las predicciones realizadas por la CNN, con respecto a
+        las anomalías detectadas.
+
+        Extrae las predicciones asociadas a la presencia o ausencia de una anomalía dentro
+        de la colmena y la formatea usando el nombre de la anomalía y las probabilidades
+        de que se encuentre presente o no dentro de la colmena.
+
+        Parámetros:
+        prediccion (array 1D): Arreglo con las predicciones realizadas por la CNN.
+
+        Retorno:
+        (list): Lista con la información de las anomalías detectadas formateadas.
+    """
+
+    # Nota. De momento la forma en que se formatea los datos solo funciona para una CNN que
+    # indica si una colmena tiene o no una anomalia (por ejemplo: sin abeja reina o con abeja reina).
+    # Si se quiere trabajar con una CNN que clasifique varias anomalías (por ejemplo: ausencia de
+    # reina, presencia de varroa, ataque de algun insecto, etc) modificar la variable anomalias,
+    # para ajustar la salida de la CNN con el formato de los datos entregados por el servidor.
+    anomalias = [
+        dict(
+            nombre=anomalia.name.lower(),
+            si=prediccion[PresenciaAnomalias.SI.value],
+            no=prediccion[PresenciaAnomalias.NO.value]
+        ) for anomalia in Anomalias
+    ]
+    return anomalias
+
 def obtenerFecha(zona_horaria):
     """
         Obtiene la fecha en la cual se ha procesado el archivo de audio.
@@ -252,6 +270,30 @@ def formatearHora(fecha):
     """
     return fecha.strftime("%H:%M:%S")
 
+def obtenerMuestra(serie_tiempo, tasa_muestreo):
+    """
+        Obtiene una muestra a partir de la serie de tiempo, que será procesada
+        por la CNN.
+
+        Extrae una cantidad de datos equivalentes la ventana por la tasa de muestreo
+        (cantidad de muestras de datos que se obtuvieron de la ventana de tiempo
+        determinada). Partiendo desde el primer elemento del array serie_tiempo hasta
+        el elemento serie_tiempo * VENTANA - 1.
+
+        Parámetros:
+        Serie_tiempo (array): Arreglo con la serie de tiempo contenida en el archivo de audio.
+        Tasa_muestreo (int): Tasa de muestreo con la cual se capturó la serie de tiempo.
+
+        Retorno:
+        (array): Arreglo de tamaño tasa_muestreo * VENTANA (ventana de tiempo), correspondientes
+        a los primeros tasa_muestreo * VENTANA elementos extraídos desde la serie de tiempo.
+    """
+    tamanno_muestra = tasa_muestreo * VENTANA
+    if len(serie_tiempo) < tamanno_muestra:
+        raise exceptions.AudioSizeError("Audio muy corto",
+                                        "El archivo tiene una duración menor a {0} {1}"
+                                        .format(VENTANA, "segundos"))
+    return serie_tiempo[:tamanno_muestra]
 
 class EstadoSaludColmena(APIView):
 
@@ -260,14 +302,9 @@ class EstadoSaludColmena(APIView):
             zonaHoraria = request.data['zonaHoraria']
             audio = request.FILES['audio']
             serie_tiempo, tasa_muestreo = cargarAudio(audio)
-            tamanno_muestra = tasa_muestreo * VENTANA
-            if len(serie_tiempo) < tamanno_muestra:
-                raise exceptions.AudioSizeError("Audio muy corto",
-                                                "El archivo tiene una duración menor a {0} {1}"
-                                                .format(VENTANA, "segundos"))
-            serie_tiempo = serie_tiempo[:tamanno_muestra]
+            muestra = obtenerMuestra(serie_tiempo, tasa_muestreo)
             mfcc_13 = librosa.feature.mfcc(
-                y=serie_tiempo, sr=tasa_muestreo, n_mfcc=13, dct_type=2)
+                y=muestra, sr=tasa_muestreo, n_mfcc=13, dct_type=2)
             mfcc_13 = mfcc_13.reshape(1, *mfcc_13.shape, N_CANAL)
             # Como solamente se esta procesando un archivo a la vez, se toma la primera
             # predicción de la matriz de predicciones
