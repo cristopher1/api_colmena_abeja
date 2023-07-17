@@ -52,7 +52,7 @@ RUN pip --no-cache-dir install -r requirements.prod.txt
 # Se copia el resto de los archivos a la carpeta de trabajo actual
 COPY . ./
 
-# Se expone el puerto
+# Se expone el puerto.
 EXPOSE 443
 
 # Se ejecuta la api
