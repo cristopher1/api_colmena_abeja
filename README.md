@@ -50,7 +50,7 @@ git clone git@github.com:cristopher1/api_colmena_abeja.git
 
 La información de las variables de entorno se encuentra dentro del archivo .env.example, que se encuentra dentro de la carpeta api. https://github.com/cristopher1/api_colmena_abeja/blob/60a27b2363143c70c78f13bb325a647a13eb1468/api/.env.example#L1-L59
 
-### <a id=Variables-de-entorno-para-configurar-DJANGO"></a> [Variables de entorno para configurar DJANGO](#entorno-django)
+### <a id="Variables-de-entorno-para-configurar-DJANGO"></a> [Variables de entorno para configurar DJANGO](#entorno-django)
 
 * ```DEBUG```: Activa el modo depurador, **en producción colocar el valor False**.
   
