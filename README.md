@@ -1,7 +1,7 @@
 # [API COLMENA ABEJA](#indice)
 
 El presente proyecto fue desarrollado durante el ramo **trabajo de titulo**, para optar al titulo de **ingenierío civil informático** en la Universidad Técnica
-Federico Santa María (UTFSM). API que contiene el extractor de características y la red neuronal convolucional (CNN), para detectar la presencia o ausencia de abeja reina dentro de la colmena.
+Federico Santa María (UTFSM). API que contiene el extractor de características y la red neuronal convolucional (CNN), para detectar la presencia o ausencia de abeja reina dentro de la colmena. Si quiere facilitar el despliegue del sistema, mediante automatización, vaya al repositorio [APP_COLMENA_ABEJA](https://github.com/cristopher1/app_colmena_abeja)
 
 ### <a id="indice"></a>Índice
 
@@ -9,8 +9,9 @@ Federico Santa María (UTFSM). API que contiene el extractor de características
 * <a id="pre-rrequisitos"></a> [Prerrequisitos](#Prerrequisitos)
 * <a id="descarga"></a> [Descargar el repositorio](#Descargar-el-repositorio)
 * <a id="entorno"></a>[Variables de entorno](#Variables-de-entorno)
-  * <a id="entorno-frontend"></a>[Para el FRONTEND](#Para-el-FRONTEND)
-  * <a id="entorno-api"></a>[Para la API](#Para-la-API)
+  * <a id="entorno-django"></a>[Variables de entorno para configurar DJANGO](#Variables-de-entorno-para-configurar-DJANGO)
+  * <a id="entorno-api"></a>[Variables de entorno para configurar la API](#Variables-de-entorno-para-configurar-la-API)
+* <a id="dockerfile"></a>[Docker](#Docker)
 * <a id="run"></a>[Ejecutar la aplicación](#Ejecutar-la-aplicación)
 
 ## [Introducción](#introduccion)
@@ -41,64 +42,84 @@ El sistema ha sido probado en SO Windows 11.
 
 Para descargar el repositorio use:
 
-```python
-git clone --recurse-submodules git@github.com:cristopher1/app_colmena_abeja.git
+```console
+git clone git@github.com:cristopher1/api_colmena_abeja.git
 ```
 
 ## [Variables de entorno](#entorno)
 
-La información de las variables de entorno se encuentra dentro del archivo .env.example, este archivo tiene 8 variables, que son usadas dentro del archivo
-docker-compose.yml para establecer la forma en que se va a desplegar el sistema. A continuación se muestra su estructura.
+La información de las variables de entorno se encuentra dentro del archivo .env.example, que se encuentra dentro de la carpeta api. https://github.com/cristopher1/api_colmena_abeja/blob/60a27b2363143c70c78f13bb325a647a13eb1468/api/.env.example#L1-L59
 
-https://github.com/cristopher1/app_colmena_abeja/blob/9bb1a74002ca747bb5d142e7fb5a44329cb35d2c/docker-compose.yml#L1-L21
+### [Variables de entorno para configurar DJANGO](#entorno-django)
 
-A continuación se muestran las variables de entorno usadas en el archivo docker-compose.yml presentado anteriormente.
+* ```DEBUG```: Activa el modo depurador, **en producción colocar el valor False**.
+  
+* ```SECRET_KEY```: Clave asociada a seguridad de DJANGO.
+  
+* ```ALLOWED_HOSTS```: Lista de HOST a los que puede responder DJANGO.
+  
+* ```CORS_ALLOWED_ORIGINS```: Lista de los servidores que estan autorizados para realizar una petición de origen cruzado a DJANGO.
 
-### [Para el FRONTEND](#entorno-frontend)
+### [Variables de entorno para configurar la API](#entorno-api)
 
-https://github.com/cristopher1/app_colmena_abeja/blob/23bea7412bc6b070c52e0b026cf7102eb3c47060/.env.example#L7-L22
+* ```VENTANA_TIEMPO```: Tamaño de la ventana de tiempo, de la cual se extraen los datos de los archivos de audio, para que la API pueda identificar el estado de
+la colmena. (Para la CNN que el sistema usa, este valor es 3).
 
-* `FRONTEND_PROJECT_DIRECTORY`: Nombre de la carpeta que contiene el FRONTEND y en su raíz esta el
-archivo Dockerfile. Debería llamarse **frontend_app_colmena_abeja**
+* ```N_CANAL```: Número de canales que tienen las características extraídas de los archivos de audio, para que la CNN pueda procesarlos. (Para las características
+que el sistema procesa, este valor es 1).
 
-* `FRONTEND_STAGE`: Modo en el que se desplegará el FRONTEND. development o production
+## [Docker](#dockerfile)
 
-* `FRONTEND_HOST_PORT`: Puerto en el HOST, donde el FRONTEND escucha peticiones
+El sistema incluye un archivo **Dockerfile**, para poder facilitar su despliegue.
+https://github.com/cristopher1/api_colmena_abeja/blob/60a27b2363143c70c78f13bb325a647a13eb1468/Dockerfile#L1-L59 Se puede apreciar que el Dockerfile ha sido
+dividido en 3 etapas: base, development y production.
 
-* `FRONTEND_CONTAINER_PORT`: Puerto en el contenedor, donde el FRONTEND escucha peticiones
+* En la etapa development: Se incluyen herramientas para desarrollo, como nano. Tambíén se despliega el sistema usando el servidor de desarrollo de DJANGO
+utilizando el puerto 8000 para escuchar las peticiones web.
+https://github.com/cristopher1/api_colmena_abeja/blob/60a27b2363143c70c78f13bb325a647a13eb1468/Dockerfile#L42
 
-### [Para la API](#entorno-api)
-
-https://github.com/cristopher1/app_colmena_abeja/blob/23bea7412bc6b070c52e0b026cf7102eb3c47060/.env.example#L24-L39
-
-* `API_PROJECT_DIRECTORY`: Nombre de la carpeta que contiene la API y en su raíz esta el
-archivo Dockerfile. Debería llamarse **api_colmena_abeja**
-
-* `API_STAGE`: Modo en el que se desplegará la API. development o production
-
-* `API_HOST_PORT`: Puerto en el HOST, donde la API escucha peticiones
-
-* `API_CONTAINER_PORT`: Puerto en el contenedor, donde la API escucha peticiones
+* En la etapa production: Se despliega la API usando unicorn y se usa el puerto 443 para escuchar las peticiones web.
+https://github.com/cristopher1/api_colmena_abeja/blob/60a27b2363143c70c78f13bb325a647a13eb1468/Dockerfile#L59
 
 ## [Ejecutar la aplicación](#run)
 
 Para ejecutar la aplicación siga los siguientes pasos.
 
-* **Nota: Los archivos Dockerfile presentes en el repositorio api_colmena_abeja y frontend_app_colmena_abeja utilizan**
-**Multi-stage, por lo que no debe olvidar habilitar el docker BuildKit al momento de ejecutar la aplicación.**
+* **Nota: El archivo Dockerfile de este repositorio utiliza multi-stage, por lo que no debe olvidar habilitar el docker BuildKit al momento de**
+**ejecutar la aplicación.**
 
-* **Nota: A partir de la versión 23.0 de Docker Desktop y Docker Engine se usa de forma predeterminada el BuildKit**
-**Por lo que no es necesario habilitarlo de forma manual.**
+* **Nota: A partir de la versión 23.0 de Docker Desktop y Docker Engine se usa de forma predeterminada el BuildKit por lo que no es necesario habilitarlo**
+**de forma manual.**
 
-1. Ingrese a la carpeta app_colmena_abeja.
+1. Ingrese a la carpeta api_colmena_abeja/api (por la teminal o interfaz gráfica).
 2. Cree un archivo llamado .env (en la misma carpeta donde esta el archivo .env.example)
 3. Copie el contenido del archivo .env.example a .env
 4. Si gusta, modifique los valores del archivo .env
-5. Repita el paso 2, 3 y 4 en api_colmena_abeja y frontend_app_colmena_abeja
-6. Abra una terminal
-7. Desde la terminal, ingrese a la carpeta app_colmena_abeja
-8. Ejecute el comando `docker-compose up --build`
+6. Abra una terminal e ingrese a la carpeta api_colmena_abeja
+8. Ejecute los siguientes comandos:
+   * Para modo desarrollo:
+     * Crear la imagen:
+       ```console
+       docker build --target development -t api_colmena_abeja_dev .
+       ```
+     * Ejecutar el contenedor:
+       ```console
+       docker run -p host_port:8000 --env-file api/.env api_colmena_abeja_dev
+       ```
+       Reemplace **host_port** por el puerto en su host, por el cual las peticiones web serán redirigidas al contenedor docker.
+       
+   * Para modo producción:
+     * Crear la imagen:
+       ```console
+       docker build --target production -t api_colmena_abeja_prod .
+       ```
+     * Ejecutar el contenedor:
+       ```console
+       docker run -p host_port:443 --env-file api/.env api_colmena_abeja_prod
+       ```
+       Reemplace **host_port** por el puerto en su host, por el cual las peticiones web serán redirigidas al contenedor docker.
 
-Una vez completados los pasos, el sistema debería estar ejecutandose en `http://localhost:${FROTEND_HOST_PORT}`
+**Nota: Para modo producción no use directamente gunicorn para servir el sistema. Conecte el contenedor con la API a un servidor de producción como nginx,**
+**para redirigir las peticiones al contenedor de la API.**
 
-https://github.com/cristopher1/api_colmena_abeja/blob/63e36a2b23169d6c7f005c5ee01bff81eb46aa90/Dockerfile#L1-L59
+Una vez completados los pasos, el sistema debería estar ejecutandose en `http://localhost:host_port`
