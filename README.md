@@ -6,7 +6,7 @@ Federico Santa María (UTFSM). API que contiene el extractor de características
 ### <a id="indice"></a>Índice
 
 * <a id="introduccion"></a>[Introducción](#Introducción)
-* <a id="prerrequisitos"></a> [Prerrequisitos](#Prerrequisitos)
+* <a id="pre-rrequisitos"></a> [Prerrequisitos](#Prerrequisitos)
 * <a id="descarga"></a> [Descargar el repositorio](#Descargar-el-repositorio)
 * <a id="entorno"></a>[Variables de entorno](#Variables-de-entorno)
   * <a id="entorno-frontend"></a>[Para el FRONTEND](#Para-el-FRONTEND)
@@ -31,7 +31,7 @@ El presente repositorio contiene la API utilizada por el sistema APP COLMENA ABE
 
 * Finalmente el resultado es enviado al cliente web. https://github.com/cristopher1/api_colmena_abeja/blob/63e36a2b23169d6c7f005c5ee01bff81eb46aa90/api/views.py#L314
 
-## [Prerrequisitos](#prerrequisitos)
+## [Prerrequisitos](#pre-rrequisitos)
 
 El sistema ha sido probado en SO Windows 11.
 
