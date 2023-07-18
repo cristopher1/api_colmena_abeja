@@ -91,7 +91,7 @@ Para ejecutar la aplicación siga los siguientes pasos.
 * **Nota: A partir de la versión 23.0 de Docker Desktop y Docker Engine se usa de forma predeterminada el BuildKit por lo que no es necesario habilitarlo**
 **de forma manual.**
 
-1. Ingrese a la carpeta api_colmena_abeja/api (por la teminal o interfaz gráfica).
+1. Ingrese a la carpeta api_colmena_abeja/api (por la teminal o interfaz gráfica)
 2. Cree un archivo llamado .env (en la misma carpeta donde esta el archivo .env.example)
 3. Copie el contenido del archivo .env.example a .env
 4. Si gusta, modifique los valores del archivo .env
