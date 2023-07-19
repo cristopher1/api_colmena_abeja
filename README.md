@@ -123,3 +123,23 @@ Para ejecutar la aplicación siga los siguientes pasos.
 **para redirigir las peticiones al contenedor de la API.**
 
 Una vez completados los pasos, el sistema debería estar ejecutandose en `http://localhost:host_port`
+
+## URLs
+
+La API responde en la url /api/estado_colmena mediante el metodo post.
+
+* En api_memoria_colmena_abejas/urls.py se encuentra la url base.
+https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f9fcdb8ca26f3b2/api_memoria_colmena_abejas/urls.py#L19-L21
+
+* En api/urls.py se encuentran las urls que procesa la API.
+https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f9fcdb8ca26f3b2/api/urls.py#L20-L22
+
+* En api/views.py se encuentra la view que se encarga de procesar la solicitud, mediante el método POST
+https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f9fcdb8ca26f3b2/api/views.py#L298-L300
+
+## Consulta HTTP
+
+La API espera recibir una petición de tipo form-data, que tiene dos campos.
+
+1. zonaHoraria: Dentro del form-data, debe haber un campo con el nombre `zonaHoraria`, este contiene un string con la zona horaria donde se encuentra
+el cliente que ha realizado la petición web, puede ver ejemplos de esto en [pytz](https://pytz.sourceforge.net/){:target="blank"}
