@@ -13,6 +13,9 @@ Federico Santa María (UTFSM). API que contiene el extractor de características
   * <a id="entorno-api"></a>[Variables de entorno para configurar la API](#Variables-de-entorno-para-configurar-la-API)
 * <a id="dockerfile"></a>[Docker](#Docker)
 * <a id="run"></a>[Ejecutar la aplicación](#Ejecutar-la-aplicación)
+* <a id="urls"></a>[URLs](#URLs)
+* <a id="consulta-http"></a>[Consulta HTTP](#Consulta-HTTP)
+* <a id="respuesta-http"></a>[Respuesta HTTP](#Respuesta-HTTP)
 
 ## <a id="Introducción"></a> [Introducción](#introduccion)
 
@@ -124,7 +127,7 @@ Para ejecutar la aplicación siga los siguientes pasos.
 
 Una vez completados los pasos, el sistema debería estar ejecutandose en `http://localhost:host_port`
 
-## URLs
+## <a id="URLs"></a> [URLs](#urls)
 
 La API responde en la url /api/estado_colmena mediante el metodo post.
 
@@ -137,9 +140,21 @@ https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f
 * En api/views.py se encuentra la view que se encarga de procesar la solicitud, mediante el método POST
 https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f9fcdb8ca26f3b2/api/views.py#L298-L300
 
-## Consulta HTTP
+## <a id="Consulta-HTTP"></a> [Consulta HTTP](#consulta-http)
 
 La API espera recibir una petición de tipo form-data, que tiene dos campos.
 
-1. zonaHoraria: Dentro del form-data, debe haber un campo con el nombre `zonaHoraria`, este contiene un string con la zona horaria donde se encuentra
-el cliente que ha realizado la petición web, puede ver ejemplos de esto en [pytz](https://pytz.sourceforge.net/){:target="blank"}
+1. audio: Dentro del form-data, debe haber un campo con el nombre `audio`. Este contiene un archivo de audio con una duración mínima de 3 segundos y
+debe tener de preferencia una tasa de muestreo de 44100 muestras por segundo. El formato del archivo de audio puede ser .wav, .mp3 u otros formatos
+aceptados por [FFmpeg](https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio)
+
+2. zonaHoraria: Dentro del form-data, debe haber un campo con el nombre `zonaHoraria`. Este contiene un string con la zona horaria donde se encuentra
+el cliente que ha realizado la petición web, puede ver ejemplos de esto en [pytz](https://pytz.sourceforge.net/).
+
+## <a id="Respuesta-HTTP"></a> [Respuesta HTTP](#respuesta-http)
+
+Luego de que la API termina de procesar la solicitud HTTP de forma exitosa, esta devolverá un objeto similar al descrito a continuación.
+https://github.com/cristopher1/api_colmena_abeja/blob/61b0a431114d789fd48cef017f9fcdb8ca26f3b2/api/views.py#L67-L83
+
+Hay que tener en cuenta que la fecha y la hora devuelta por la API, corresponden a la hora y fecha en la cual se ha terminado de procesar el archivo de audio,
+y no corresponde a la hora y fecha en la cual el sistema ha recibido la petición web.
