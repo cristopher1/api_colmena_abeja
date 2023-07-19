@@ -122,7 +122,7 @@ Para ejecutar la aplicación siga los siguientes pasos.
        ```
        Reemplace **host_port** por el puerto en su host, por el cual las peticiones web serán redirigidas al contenedor docker.
 
-**Nota: Para modo producción no use directamente gunicorn para servir el sistema. Conecte el contenedor con la API a un servidor de producción como nginx,**
+**Nota: Para modo producción no use directamente gunicorn para servir el sistema. Use un servidor de producción como nginx,**
 **para redirigir las peticiones al contenedor de la API.**
 
 Una vez completados los pasos, el sistema debería estar ejecutandose en `http://localhost:host_port`
